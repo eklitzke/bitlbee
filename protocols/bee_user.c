@@ -286,7 +286,7 @@ void imcb_notify_email(struct im_connection *ic, char *format, ...)
 	if (handle != NULL) {
 		imcb_buddy_msg(ic, handle, msg, 0, 0);
 	} else {
-		imcb_log(ic, msg);
+		imcb_log(ic, "%s", msg);
 	}
 
 	g_free(msg);
