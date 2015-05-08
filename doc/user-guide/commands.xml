@@ -1044,6 +1044,17 @@
 
 	</bitlbee-setting>
 
+	<bitlbee-setting name="gmail_notifications_limit" type="integer" scope="account">
+		<default>5</default>
+
+		<description>
+			<para>
+				Maximum number of emails to join at once (usually on login).
+			</para>
+		</description>
+
+	</bitlbee-setting>
+
 	<bitlbee-setting name="message_length" type="integer" scope="account">
 		<default>140</default>
 

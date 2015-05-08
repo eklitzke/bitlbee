@@ -792,6 +792,7 @@ xt_status jabber_iq_parse_gmail(struct im_connection *ic, struct xt_node *node, 
 	char *xmlns, *from;
 	guint64 l_time = 0;
 	char *tid = NULL;
+	int max = 0;
 
 	if (!(c = xt_find_node(node->children, "mailbox")) ||
 	    !(from = xt_find_attr(node, "from")) ||
@@ -801,9 +802,10 @@ xt_status jabber_iq_parse_gmail(struct im_connection *ic, struct xt_node *node, 
 		return XT_HANDLED;
 	}
 
+	max = set_getint(&ic->acc->set, "gmail_notifications_limit");
 	c = c->children;
 
-	while ((c = xt_find_node(c, "mail-thread-info"))) {
+	while ((max-- > 0) && (c = xt_find_node(c, "mail-thread-info"))) {
 		struct xt_node *thread, *s;
 		char *subject = NULL;
 		char *snippet = NULL;
