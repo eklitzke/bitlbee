@@ -806,9 +806,9 @@ xt_status jabber_iq_parse_gmail(struct im_connection *ic, struct xt_node *node, 
 	c = c->children;
 
 	while ((max-- > 0) && (c = xt_find_node(c, "mail-thread-info"))) {
-		struct xt_node *thread, *s;
-		char *subject = NULL;
-		char *snippet = NULL;
+		struct xt_node *s;
+		char *subject = "<no subject>";
+		char *sender = "<no sender>";
 		char *msg = NULL;
 		guint64 t_time;
 
@@ -818,26 +818,18 @@ xt_status jabber_iq_parse_gmail(struct im_connection *ic, struct xt_node *node, 
 			tid = xt_find_attr(c, "tid");
 		}
 
-		thread = c->children;
+		if ((s = xt_find_node(c->children, "senders")) &&
+		    (s = xt_find_node_by_attr(s->children, "sender", "unread", "1"))) {
+			sender = xt_find_attr(s, "name");
+		}
 
-		if ((s = xt_find_node(thread, "subject"))) {
+		if ((s = xt_find_node(c->children, "subject")) && s->text) {
 			subject = s->text;
 		}
 
-		if ((s = xt_find_node(thread, "snippet"))) {
-			snippet = s->text;
-		}
+		msg = g_strdup_printf("New mail from %s: %s", sender, subject);
 
-		if (subject) {
-			msg = g_strdup_printf("New mail for %s. Subj: %s", from, subject);
-		} else {
-			msg = g_strdup_printf("New mail for %s.", from);
-		}
 		imcb_notify_email(ic, set_getstr(&ic->acc->set, "notify_handle"), msg, 0, 0);
-
-		if (snippet) {
-			imcb_notify_email(ic, set_getstr(&ic->acc->set, "notify_handle"), snippet, 0, 0);
-		}
 
 		c = c->next;
 		g_free(msg);
