@@ -790,61 +790,62 @@ xt_status jabber_iq_parse_gmail(struct im_connection *ic, struct xt_node *node, 
 	struct xt_node *c;
 	struct jabber_data *jd = ic->proto_data;
 	char *xmlns, *from;
+	guint64 l_time = 0;
+	char *tid = NULL;
 
 	if (!(c = xt_find_node(node->children, "mailbox")) ||
 	    !(from = xt_find_attr(node, "from")) ||
-	    !(xmlns = xt_find_attr(c, "xmlns"))) {
+	    !(xmlns = xt_find_attr(c, "xmlns")) ||
+	    (g_strcmp0(xmlns, XMLNS_GMAILNOTIFY) != 0)) {
 		imcb_log(ic, "WARNING: Received incomplete mailbox packet for gmail notify");
 		return XT_HANDLED;
 	}
-	if (strcmp(xmlns, XMLNS_GMAILNOTIFY) == 0) {
-		guint64 l_time = 0;
-		char *tid = NULL;
-		c = c->children;
 
-		while ((c = xt_find_node(c, "mail-thread-info"))) {
-			struct xt_node *thread, *s;
-			char *subject = NULL;
-			char *snippet = NULL;
-			char *msg = NULL;
-			guint64 t_time;
+	c = c->children;
 
-			t_time = g_ascii_strtoull(xt_find_attr(c, "date"), NULL, 10);
-			if (t_time && t_time > l_time) {
-				l_time = t_time;
-				tid = xt_find_attr(c, "tid");
-			}
+	while ((c = xt_find_node(c, "mail-thread-info"))) {
+		struct xt_node *thread, *s;
+		char *subject = NULL;
+		char *snippet = NULL;
+		char *msg = NULL;
+		guint64 t_time;
 
-			thread = c->children;
-
-			if ((s = xt_find_node(thread, "subject"))) {
-				subject = s->text;
-			}
-
-			if ((s = xt_find_node(thread, "snippet"))) {
-				snippet = s->text;
-			}
-
-			if (subject) {
-				msg = g_strdup_printf("New mail for %s. Subj: %s", from, subject);
-			} else {
-				msg = g_strdup_printf("New mail for %s.", from);
-			}
-			imcb_notify_email(ic, set_getstr(&ic->acc->set, "notify_handle"), msg, 0, 0);
-
-			if (snippet) {
-				imcb_notify_email(ic, set_getstr(&ic->acc->set, "notify_handle"), snippet, 0, 0);
-			}
-
-			c = c->next;
-			g_free(msg);
+		t_time = g_ascii_strtoull(xt_find_attr(c, "date"), NULL, 10);
+		if (t_time && t_time > l_time) {
+			l_time = t_time;
+			tid = xt_find_attr(c, "tid");
 		}
-		if (l_time && (!jd->gmail_time || l_time > jd->gmail_time)) {
-			jd->gmail_time = l_time;
-			if (tid) {
-				g_free(jd->gmail_tid);
-				jd->gmail_tid = g_strdup(tid);
-			}
+
+		thread = c->children;
+
+		if ((s = xt_find_node(thread, "subject"))) {
+			subject = s->text;
+		}
+
+		if ((s = xt_find_node(thread, "snippet"))) {
+			snippet = s->text;
+		}
+
+		if (subject) {
+			msg = g_strdup_printf("New mail for %s. Subj: %s", from, subject);
+		} else {
+			msg = g_strdup_printf("New mail for %s.", from);
+		}
+		imcb_notify_email(ic, set_getstr(&ic->acc->set, "notify_handle"), msg, 0, 0);
+
+		if (snippet) {
+			imcb_notify_email(ic, set_getstr(&ic->acc->set, "notify_handle"), snippet, 0, 0);
+		}
+
+		c = c->next;
+		g_free(msg);
+	}
+
+	if (l_time && (!jd->gmail_time || l_time > jd->gmail_time)) {
+		jd->gmail_time = l_time;
+		if (tid) {
+			g_free(jd->gmail_tid);
+			jd->gmail_tid = g_strdup(tid);
 		}
 	}
 
