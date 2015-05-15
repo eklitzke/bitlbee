@@ -26,18 +26,6 @@
 #ifndef _MSN_H
 #define _MSN_H
 
-/* Some hackish magicstrings to make special-purpose messages/switchboards.
- */
-#define TYPING_NOTIFICATION_MESSAGE "\r\r\rBEWARE, ME R TYPINK MESSAGE!!!!\r\r\r"
-#define NUDGE_MESSAGE "\r\r\rSHAKE THAT THING\r\r\r"
-#define GROUPCHAT_SWITCHBOARD_MESSAGE "\r\r\rME WANT TALK TO MANY PEOPLE\r\r\r"
-
-#ifdef DEBUG_MSN
-#define debug(text ...) imcb_log(ic, text);
-#else
-#define debug(text ...)
-#endif
-
 #define MSN_SSL_HOST "s.gateway.messenger.live.com"
 #define MSN_SSL_PORT 443
 
@@ -60,7 +48,7 @@
 
 #define MSN_MESSAGE_HEADERS MSN_BASE_HEADERS \
 	"Messaging: 2.0\r\n" \
-	"Message-Type: Text\r\n" \
+	"Message-Type: %s\r\n" \
 	"Content-Length: %zd\r\n" \
 	"Content-Type: text/plain; charset=UTF-8\r\n" \
 	"X-MMS-IM-Format: FN=Segoe%%20UI; EF=; CO=0; CS=0; PF=0\r\n" \
@@ -85,17 +73,6 @@
 	"<sep n=\"PE\"><VER>BitlBee:" BITLBEE_VERSION "</VER><TYP>1</TYP><Capabilities>%d:%d</Capabilities></sep>" \
 	"<sep n=\"IM\"><Capabilities>%d:%d</Capabilities></sep>" \
 	"</user>"
-
-#define MSN_TYPING_HEADERS "MIME-Version: 1.0\r\n" \
-	"Content-Type: text/x-msmsgscontrol\r\n" \
-	"TypingUser: %s\r\n" \
-	"\r\n\r\n"
-
-#define MSN_NUDGE_HEADERS "MIME-Version: 1.0\r\n" \
-	"Content-Type: text/x-msnmsgr-datacast\r\n" \
-	"\r\n" \
-	"ID: 1\r\n" \
-	"\r\n"
 
 #define PROFILE_URL "http://members.msn.com/"
 
@@ -227,7 +204,8 @@ void msn_ns_close(struct msn_data *handler);
 void msn_auth_got_passport_token(struct im_connection *ic, const char *token, const char *error);
 void msn_auth_got_contact_list(struct im_connection *ic);
 int msn_ns_finish_login(struct im_connection *ic);
-int msn_ns_sendmessage(struct im_connection *ic, struct bee_user *bu, const char *text);
+int msn_ns_send_typing(struct im_connection *ic, struct bee_user *bu);
+int msn_ns_send_message(struct im_connection *ic, struct bee_user *bu, const char *text);
 int msn_ns_command(struct msn_data *md, char **cmd, int num_parts, char *msg, int msglen);
 int msn_ns_message(struct msn_data *md, char *msg, int msglen, char **cmd, int num_parts);
 
